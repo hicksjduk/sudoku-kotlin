@@ -27,13 +27,9 @@ fun boxSize(): Pair<Int, Int> {
 fun calcBoxes(): List<Box> {
     validateParameters()
     val (rowsPerBox, colsPerBox) = boxSize()
-    return (0 until gridSize step rowsPerBox).flatMap {topRow -> 
-        val bottomRow = topRow + rowsPerBox - 1
-        (0 until gridSize step colsPerBox).map {leftCol ->
-            val rightCol = leftCol + colsPerBox - 1
-            Box(topRow..bottomRow, leftCol..rightCol)
-        }
-    }
+    val rowRanges = (0 until gridSize step rowsPerBox).map {it..(it + rowsPerBox - 1)}
+    val colRanges = (0 until gridSize step colsPerBox).map {it..(it + colsPerBox - 1)}
+    return rowRanges.flatMap {rows -> colRanges.map {cols -> Box(rows, cols)}}
 }
 
 fun main() = println(sudoku(puzzle).firstOrNull()?.asString() ?: "No solution found")
