@@ -57,13 +57,10 @@ fun validate(grid: Grid) {
 fun hasDuplicates(values: List<Int>): Boolean = 
     values.size != values.distinct().size
 
-fun solve(grid: Grid): Sequence<Grid> {
-    val square = emptySquares(grid).firstOrNull()
-    return if (square == null) 
-        sequenceOf(grid) 
-    else 
+fun solve(grid: Grid): Sequence<Grid> =
+    emptySquares(grid).firstOrNull()?.let {square ->
         solveAt(grid, square)
-}
+    } ?: sequenceOf(grid) 
 
 fun emptySquares(grid: Grid): Sequence<Square> =
     grid.asSequence().flatMapIndexed {row, values ->
