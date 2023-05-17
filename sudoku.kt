@@ -54,7 +54,8 @@ fun validate(grid: Grid) {
         throw Exception ("Box has duplicate values")
 }
 
-fun hasDuplicates(values: List<Int>) = values.size != values.distinct().size
+fun hasDuplicates(values: List<Int>): Boolean = 
+    values.size != values.distinct().size
 
 fun solve(grid: Grid): Sequence<Grid> {
     val square = emptySquares(grid).firstOrNull()
