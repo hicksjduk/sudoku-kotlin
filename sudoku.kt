@@ -7,7 +7,7 @@ typealias Box = Pair<IntRange, IntRange>
 val permittedValues = (1..9).toList()
 val emptySquare = 0
 val gridSize = permittedValues.size
-val boxes = calcBoxes()
+val boxes = {validateParameters(); calcBoxes()}()
 
 fun validateParameters() {
     if (gridSize == 0)
@@ -24,10 +24,8 @@ fun boxSize(): Pair<Int, Int> {
     return Pair(rows, gridSize / rows)
 }
 
-fun calcBoxes(): List<Box> {
-    validateParameters()
-    val (rowsPerBox, colsPerBox) = boxSize()
-    fun ranges(perBox: Int) = (0 until gridSize step perBox).map {it..(it + perBox -1)}
+fun calcBoxes(): List<Box> = boxSize().let {(rowsPerBox, colsPerBox) ->
+    fun ranges(perBox: Int) = (0 until gridSize step perBox).map {it..(it + perBox - 1)}
     val rowRanges = ranges(rowsPerBox)
     val colRanges = ranges(colsPerBox)
     return rowRanges.flatMap {rows -> colRanges.map {cols -> Box(rows, cols)}}
@@ -66,47 +64,51 @@ fun solve(grid: Grid): Sequence<Grid> {
         solveAt(grid, square)
 }
 
-fun emptySquares(grid: Grid) =
+fun emptySquares(grid: Grid): Sequence<Square> =
     grid.asSequence().flatMapIndexed {row, values ->
         values.asSequence().mapIndexedNotNull {col, value ->
             if (value == emptySquare) Square(row, col) else null
         }
     }
 
-fun solveAt(grid: Grid, square: Square) = allowedValues(grid, square).asSequence()
-    .map {setValueAt(grid, square, it)}
-    .flatMap {solve(it)}
+fun solveAt(grid: Grid, square: Square): Sequence<Grid> = 
+    allowedValues(grid, square).asSequence()
+        .map {setValueAt(grid, square, it)}
+        .flatMap {solve(it)}
 
-fun allowedValues(grid: Grid, square: Square) = square.let {(row, col) ->
-    permittedValues - 
-        rowValues(grid, row) - 
-        colValues(grid, col) -
-        boxValues(grid, boxContaining(square))
-}
+fun allowedValues(grid: Grid, square: Square): List<Int> = 
+    square.let {(row, col) ->
+        permittedValues - 
+            rowValues(grid, row) - 
+            colValues(grid, col) -
+            boxValues(grid, boxContaining(square))
+    }
 
-fun setValueAt(grid: Grid, square: Square, value: Int): Grid = square.let {(row, col) ->
-    val newRow = intArrayOf(*grid[row])
-    newRow[col] = value
-    val answer = arrayOf(*grid)
-    answer[row] = newRow
-    return answer
-}
+fun setValueAt(grid: Grid, square: Square, value: Int): Grid = 
+    square.let {(row, col) ->
+        val newRow = intArrayOf(*grid[row])
+        newRow[col] = value
+        val answer = arrayOf(*grid)
+        answer[row] = newRow
+        return answer
+    }
 
-fun notEmpty(value: Int) = value != emptySquare
+fun notEmpty(value: Int): Boolean = value != emptySquare
 
-fun rowValues(grid: Grid, row: Int) = grid[row].filter(::notEmpty)
+fun rowValues(grid: Grid, row: Int): List<Int> = grid[row].filter(::notEmpty)
 
-fun colValues(grid: Grid, col: Int) = grid.map {it[col]}.filter(::notEmpty)
+fun colValues(grid: Grid, col: Int): List<Int> = grid.map {it[col]}.filter(::notEmpty)
 
-fun boxValues(grid: Grid, box: Box) = box.let {(rows, cols) ->
+fun boxValues(grid: Grid, box: Box): List<Int> = box.let {(rows, cols) ->
     grid.slice(rows).flatMap {it.slice(cols)}.filter(::notEmpty)
 }
 
-fun boxContaining(square: Square) = square.let {(row, col) ->
+fun boxContaining(square: Square): Box = square.let {(row, col) ->
     boxes.first {(rows, cols) -> row in rows && col in cols}
 }
 
-fun Grid.asString() = this.map {it.map {it.toString()}.joinToString(" ")}.joinToString("\n")
+fun Grid.asString(): String = 
+    this.map {it.map {it.toString()}.joinToString(" ")}.joinToString("\n")
 
 val puzzle: Grid = arrayOf(
     intArrayOf(8,0,0,0,0,0,0,0,0),
