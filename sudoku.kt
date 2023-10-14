@@ -31,74 +31,72 @@ fun calcBoxes(): List<Box> = boxSize().let {(rowsPerBox, colsPerBox) ->
     return rowRanges.flatMap {rows -> colRanges.map {cols -> Box(rows, cols)}}
 }
 
-fun main() = println(sudoku(puzzle).firstOrNull()?.asString() ?: "No solution found")
+fun main() = println(puzzle.sudoku().firstOrNull()?.asString() ?: "No solution found")
 
-fun sudoku(grid: Grid): Sequence<Grid> {
-    validate(grid)
-    return solve(grid)
+fun Grid.sudoku(): Sequence<Grid> {
+    validate()
+    return solve()
 }
 
-fun validate(grid: Grid) {
-    if (grid.size != gridSize)
+fun Grid.validate() {
+    if (size != gridSize)
         throw Exception("Wrong number of rows")
-    if (grid.any {it.size != gridSize})
+    if (any {it.size != gridSize})
         throw Exception("Wrong number of columns")
-    val rows = (0 until gridSize).map {rowValues(grid, it)}
+    val rows = (0 until gridSize).map(this::rowValues)
     if (rows.any {r -> r.any {it !in permittedValues}})
         throw Exception("Unsupported value")
     if (rows.any(::hasDuplicates))
         throw Exception("Row has duplicate values")
-    if ((0 until gridSize).map {colValues(grid, it)}.any(::hasDuplicates))
+    if ((0 until gridSize).map(this::colValues).any(::hasDuplicates))
         throw Exception("Column has duplicate values")
-    if (boxes.map {boxValues(grid, it)}.any(::hasDuplicates))
+    if (boxes.map(this::boxValues).any(::hasDuplicates))
         throw Exception ("Box has duplicate values")
 }
 
 fun hasDuplicates(values: List<Int>): Boolean = 
     values.size != values.distinct().size
 
-fun solve(grid: Grid): Sequence<Grid> =
-    emptySquares(grid).firstOrNull()?.let {square ->
-        solveAt(grid, square)
-    } ?: sequenceOf(grid) 
+fun Grid.solve(): Sequence<Grid> =
+    emptySquares().firstOrNull()?.let(this::solveAt) ?: sequenceOf(this) 
 
-fun emptySquares(grid: Grid): Sequence<Square> =
-    grid.asSequence().flatMapIndexed {row, values ->
+fun Grid.emptySquares(): Sequence<Square> =
+    asSequence().flatMapIndexed {row, values ->
         values.asSequence().mapIndexedNotNull {col, value ->
             if (value == emptySquare) Square(row, col) else null
         }
     }
 
-fun solveAt(grid: Grid, square: Square): Sequence<Grid> = 
-    allowedValues(grid, square).asSequence()
-        .map {setValueAt(grid, square, it)}
-        .flatMap {solve(it)}
+fun Grid.solveAt(square: Square): Sequence<Grid> = 
+    allowedValues(square).asSequence()
+        .map {setValueAt(square, it)}
+        .flatMap(Grid::solve)
 
-fun allowedValues(grid: Grid, square: Square): List<Int> = 
+fun Grid.allowedValues(square: Square): List<Int> = 
     square.let {(row, col) ->
         permittedValues - 
-            rowValues(grid, row) - 
-            colValues(grid, col) -
-            boxValues(grid, boxContaining(square))
+            rowValues(row) - 
+            colValues(col) -
+            boxValues(boxContaining(square))
     }
 
-fun setValueAt(grid: Grid, square: Square, value: Int): Grid = 
+fun Grid.setValueAt(square: Square, value: Int): Grid = 
     square.let {(row, col) ->
-        val newRow = intArrayOf(*grid[row])
+        val newRow = intArrayOf(*this[row])
         newRow[col] = value
-        val answer = arrayOf(*grid)
+        val answer = arrayOf(*this)
         answer[row] = newRow
         return answer
     }
 
 fun notEmpty(value: Int): Boolean = value != emptySquare
 
-fun rowValues(grid: Grid, row: Int): List<Int> = grid[row].filter(::notEmpty)
+fun Grid.rowValues(row: Int): List<Int> = this[row].filter(::notEmpty)
 
-fun colValues(grid: Grid, col: Int): List<Int> = grid.map {it[col]}.filter(::notEmpty)
+fun Grid.colValues(col: Int): List<Int> = this.map {it[col]}.filter(::notEmpty)
 
-fun boxValues(grid: Grid, box: Box): List<Int> = box.let {(rows, cols) ->
-    grid.slice(rows).flatMap {it.slice(cols)}.filter(::notEmpty)
+fun Grid.boxValues(box: Box): List<Int> = box.let {(rows, cols) ->
+    this.slice(rows).flatMap {it.slice(cols)}.filter(::notEmpty)
 }
 
 fun boxContaining(square: Square): Box = square.let {(row, col) ->
