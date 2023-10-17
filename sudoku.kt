@@ -1,8 +1,8 @@
 import kotlin.math.*
 
 typealias Grid = Array<IntArray>
-typealias Square = Pair<Int, Int>
-typealias Box = Pair<IntRange, IntRange>
+data class Square (val row: Int, val col: Int)
+data class Box (val rows: IntRange, val cols: IntRange)
 
 val permittedValues = (1..9).toList()
 val emptySquare = 0
@@ -73,38 +73,33 @@ fun Grid.solveAt(square: Square): Sequence<Grid> =
         .flatMap(Grid::solve)
 
 fun Grid.allowedValues(square: Square): List<Int> = 
-    square.let {(row, col) ->
-        permittedValues - 
-            rowValues(row) - 
-            colValues(col) -
-            boxValues(boxContaining(square))
-    }
+    permittedValues - 
+        rowValues(square.row) - 
+        colValues(square.col) -
+        boxValues(boxContaining(square))
 
-fun Grid.setValueAt(square: Square, value: Int): Grid = 
-    square.let {(row, col) ->
-        val newRow = intArrayOf(*this[row])
-        newRow[col] = value
-        val answer = arrayOf(*this)
-        answer[row] = newRow
-        return answer
-    }
-
+fun Grid.setValueAt(square: Square, value: Int): Grid {
+    val newRow = intArrayOf(*this[square.row])
+    newRow[square.col] = value
+    val answer = arrayOf(*this)
+    answer[square.row] = newRow
+    return answer
+}
+    
 fun notEmpty(value: Int): Boolean = value != emptySquare
 
 fun Grid.rowValues(row: Int): List<Int> = this[row].filter(::notEmpty)
 
 fun Grid.colValues(col: Int): List<Int> = this.map {it[col]}.filter(::notEmpty)
 
-fun Grid.boxValues(box: Box): List<Int> = box.let {(rows, cols) ->
-    this.slice(rows).flatMap {it.slice(cols)}.filter(::notEmpty)
-}
+fun Grid.boxValues(box: Box): List<Int> = 
+    slice(box.rows).flatMap {it.slice(box.cols)}.filter(::notEmpty)
 
-fun boxContaining(square: Square): Box = square.let {(row, col) ->
-    boxes.first {(rows, cols) -> row in rows && col in cols}
-}
+fun boxContaining(square: Square): Box = 
+    boxes.first {square.row in it.rows && square.col in it.cols}
 
 fun Grid.asString(): String = 
-    this.map {it.map {it.toString()}.joinToString(" ")}.joinToString("\n")
+    map {it.map {it.toString()}.joinToString(" ")}.joinToString("\n")
 
 val puzzle: Grid = arrayOf(
     intArrayOf(8,0,0,0,0,0,0,0,0),
