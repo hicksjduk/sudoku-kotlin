@@ -25,7 +25,8 @@ fun boxSize(): Pair<Int, Int> {
 }
 
 fun calcBoxes(): List<Box> = boxSize().let {(rowsPerBox, colsPerBox) ->
-    fun ranges(perBox: Int) = (0 until gridSize step perBox).map {it..(it + perBox - 1)}
+    fun ranges(perBox: Int): List<IntRange> = 
+        (0 until gridSize step perBox).map {it..(it + perBox - 1)}
     val rowRanges = ranges(rowsPerBox)
     val colRanges = ranges(colsPerBox)
     return rowRanges.flatMap {rows -> colRanges.map {cols -> Box(rows, cols)}}
