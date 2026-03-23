@@ -12,7 +12,7 @@ val boxes = {validateParameters(); calcBoxes()}()
 fun validateParameters() {
     require(gridSize != 0) 
         {"No permitted values specified"}
-    require(!hasDuplicates(permittedValues)) 
+    require(!permittedValues.hasDuplicates()) 
         {"Permitted values include duplicates"}
     require(emptySquare !in permittedValues) 
         {"Permitted values include the empty square value"}
@@ -47,16 +47,16 @@ fun Grid.validate() {
     val rows = (0 until gridSize).map(this::rowValues)
     require(rows.none {r -> r.any {it !in permittedValues}})
         {"Unsupported value"}
-    require(rows.none(::hasDuplicates))
+    require(rows.none(List<*>::hasDuplicates))
         {"Row has duplicate values"}
-    require((0 until gridSize).map(this::colValues).none(::hasDuplicates))
+    require((0 until gridSize).map(this::colValues).none(List<*>::hasDuplicates))
         {"Column has duplicate values"}
-    require(boxes.map(this::boxValues).none(::hasDuplicates))
+    require(boxes.map(this::boxValues).none(List<*>::hasDuplicates))
         {"Box has duplicate values"}
 }
 
-fun hasDuplicates(values: List<Int>): Boolean = 
-    values.size != values.distinct().size
+fun List<*>.hasDuplicates(): Boolean = 
+    size != distinct().size
 
 fun Grid.solve(): Sequence<Grid> =
     emptySquares().firstOrNull()?.let(this::solveAt) ?: sequenceOf(this) 
