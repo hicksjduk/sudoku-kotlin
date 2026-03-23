@@ -10,12 +10,12 @@ val gridSize = permittedValues.size
 val boxes = {validateParameters(); calcBoxes()}()
 
 fun validateParameters() {
-    if (gridSize == 0)
-        throw Exception("No permitted values specified")
-    if (hasDuplicates(permittedValues))
-        throw Exception("Permitted values include duplicates")
-    if (emptySquare in permittedValues)
-        throw Exception("Permitted values include the empty square value")
+    require(gridSize != 0) 
+        {"No permitted values specified"}
+    require(!hasDuplicates(permittedValues)) 
+        {"Permitted values include duplicates"}
+    require(emptySquare !in permittedValues) 
+        {"Permitted values include the empty square value"}
 }
 
 fun boxSize(): Pair<Int, Int> {
@@ -40,19 +40,19 @@ fun Grid.sudoku(): Sequence<Grid> {
 }
 
 fun Grid.validate() {
-    if (size != gridSize)
-        throw Exception("Wrong number of rows")
-    if (any {it.size != gridSize})
-        throw Exception("Wrong number of columns")
+    require(size == gridSize)
+        {"Wrong number of rows"}
+    require(none {it.size != gridSize})
+        {"Wrong number of columns"}
     val rows = (0 until gridSize).map(this::rowValues)
-    if (rows.any {r -> r.any {it !in permittedValues}})
-        throw Exception("Unsupported value")
-    if (rows.any(::hasDuplicates))
-        throw Exception("Row has duplicate values")
-    if ((0 until gridSize).map(this::colValues).any(::hasDuplicates))
-        throw Exception("Column has duplicate values")
-    if (boxes.map(this::boxValues).any(::hasDuplicates))
-        throw Exception ("Box has duplicate values")
+    require(rows.none {r -> r.any {it !in permittedValues}})
+        {"Unsupported value"}
+    require(rows.none(::hasDuplicates))
+        {"Row has duplicate values"}
+    require((0 until gridSize).map(this::colValues).none(::hasDuplicates))
+        {"Column has duplicate values"}
+    require(boxes.map(this::boxValues).none(::hasDuplicates))
+        {"Box has duplicate values"}
 }
 
 fun hasDuplicates(values: List<Int>): Boolean = 
